@@ -17,6 +17,8 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@theme$': '<rootDir>/src/theme/index',
     '^@models$': '<rootDir>/src/models/index',
+    // Specific service mocks MUST come before the wildcard @services/* rule
+    '^@services/database$': '<rootDir>/src/__mocks__/services/database.ts',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
     '^@store/(.*)$': '<rootDir>/src/store/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
