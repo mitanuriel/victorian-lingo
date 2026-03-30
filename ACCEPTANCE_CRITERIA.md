@@ -5,6 +5,55 @@
 
 ---
 
+## Development Workflow
+
+Every story (US-XXX) represents one unit of deliverable work.  
+Each story **must** complete the following gates in order before its implementation is
+considered done and before work on the next story begins:
+
+### Gate 1 — Unit Tests
+
+- **GIVEN** a story's code changes have been written
+- **WHEN** the story is marked ready for review
+- **THEN** at least one unit-test file covering the new or changed code exists in
+  `src/__tests__/` (mirroring the source path, e.g. `src/services/gutendex.ts` →
+  `src/__tests__/services/gutendex.test.ts`)
+- **AND** all existing tests continue to pass (`npx jest --passWithNoTests`)
+- **AND** any public function, hook, or store action introduced by the story has at
+  least one positive-path and one negative-path test case
+- **AND** tests are written consecutively — no story may accumulate more than one story's
+  worth of untested code at any time
+
+### Gate 2 — Linting
+
+- **GIVEN** unit tests pass
+- **WHEN** the linter is run (`npx eslint . --ext .ts,.tsx`)
+- **THEN** zero errors are reported
+- **AND** zero warnings are introduced that were not already present before this story
+  (new code must be warning-free)
+- **AND** TypeScript strict-mode compilation produces zero new errors
+  (`npx tsc --noEmit`)
+
+### Gate 3 — Commit
+
+- **GIVEN** tests pass and the linter is clean
+- **WHEN** the story's work is committed to git
+- **THEN** the commit covers **only** the files relevant to that story (no bundling
+  multiple stories into one commit)
+- **AND** the commit message follows the pattern  
+  `<type>(scope): <imperative summary>` — e.g.  
+  `feat(library): add era and genre filter pills (US-005)`
+- **AND** the commit is pushed to `origin/main` before beginning the next story
+
+### Iteration Rule
+
+> No story may be started unless all preceding stories in the same epic have
+> passed all three gates and been committed.  
+> Partial implementation commits (marked `wip:`) are allowed mid-story but must be
+> squashed or amended before the story's gate-3 commit.
+
+---
+
 ## Epic 1 — Library & Book Discovery
 
 ### US-001 — Browse curated catalog
@@ -289,3 +338,19 @@
 - **AND** the streak is represented as an inkwell filling or candle burning progress graphic
 - **AND** a missed day resets the streak to zero with a gentle contextual message
   (no punitive language)
+
+---
+
+## Development Gate Checklist (per story)
+
+Copy this checklist into each PR / commit message body:
+
+```
+[ ] Unit tests written for new/changed code (src/__tests__/…)
+[ ] `npx jest --passWithNoTests` — all tests pass
+[ ] `npx eslint . --ext .ts,.tsx` — zero errors, zero new warnings
+[ ] `npx tsc --noEmit` — zero new TypeScript errors
+[ ] Commit covers only this story's files
+[ ] Commit message: feat|fix|chore|refactor(scope): summary (US-XXX)
+[ ] Pushed to origin/main
+```
