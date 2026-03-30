@@ -26,6 +26,7 @@ module.exports = {
     // Stub React Native modules that don't exist in Node test env
     'expo-sqlite': '<rootDir>/src/__mocks__/expo-sqlite.ts',
     'expo-file-system': '<rootDir>/src/__mocks__/expo-file-system.ts',
+    'expo-file-system/legacy': '<rootDir>/src/__mocks__/expo-file-system.ts',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(jest-)?expo|@expo|expo-router|expo-sqlite|expo-file-system|react-native|@react-native|@react-navigation)',

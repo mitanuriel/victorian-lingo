@@ -8,7 +8,7 @@
  * and uses proper User-Agent identification.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { resolveTextUrl } from './gutendex';
 import type { GutendexBook } from '@models';
 
