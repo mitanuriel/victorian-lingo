@@ -8,18 +8,21 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Colors, FontFamily, FontSize, Spacing, Radius } from '@theme';
 import { useBookStore } from '@store/bookStore';
 import { readCachedBook, splitIntoChapters } from '@services/bookDownload';
+import { lookupWord, tokenizeText } from '@services/vocabulary';
+import { VocabularyPanel } from '@components/VocabularyPanel';
+import type { VocabWord } from '@models';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -52,22 +55,50 @@ function ChapterHeading({ title }: { title: string }) {
   );
 }
 
-// ── Single paragraph of body text ─────────────────────────────────────────────
+// ── Single paragraph of body text — words are individually tappable ──────────
 
-function BodyParagraph({ text }: { text: string }) {
+interface BodyParagraphProps {
+  text: string;
+  onWordPress: (word: string) => void;
+}
+
+function BodyParagraph({ text, onWordPress }: BodyParagraphProps) {
   const trimmed = text.trim();
   if (!trimmed) return null;
-  return <Text style={st.bodyText}>{trimmed}</Text>;
+  const tokens = tokenizeText(trimmed);
+  return (
+    <Text style={st.bodyText}>
+      {tokens.map((tok, i) =>
+        tok.type === 'word' ? (
+          <Text
+            key={i}
+            suppressHighlighting
+            onPress={() => onWordPress(tok.value)}
+            onLongPress={() => onWordPress(tok.value)}
+          >
+            {tok.value}
+          </Text>
+        ) : (
+          tok.value
+        )
+      )}
+    </Text>
+  );
 }
 
 // ── Chapter content broken into paragraphs ────────────────────────────────────
 
-function ChapterContent({ content }: { content: string }) {
+interface ChapterContentProps {
+  content: string;
+  onWordPress: (word: string) => void;
+}
+
+function ChapterContent({ content, onWordPress }: ChapterContentProps) {
   const paragraphs = content.split(/\n{2,}/);
   return (
     <>
       {paragraphs.map((para, idx) => (
-        <BodyParagraph key={idx} text={para} />
+        <BodyParagraph key={idx} text={para} onWordPress={onWordPress} />
       ))}
     </>
   );
@@ -125,8 +156,15 @@ export default function ReaderScreen() {
   const [activeChapter, setActiveChapter] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedWord, setSelectedWord] = useState<VocabWord | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
+
+  // Word tap handler — looks up in seed dictionary; silently ignores unknown words
+  const handleWordPress = useCallback((rawWord: string) => {
+    const found = lookupWord(rawWord);
+    if (found) setSelectedWord(found);
+  }, []);
 
   // Load and split cached text into chapters
   useEffect(() => {
@@ -236,7 +274,7 @@ export default function ReaderScreen() {
         {currentChapter && (
           <>
             <ChapterHeading title={currentChapter.title} />
-            <ChapterContent content={currentChapter.content} />
+            <ChapterContent content={currentChapter.content} onWordPress={handleWordPress} />
           </>
         )}
 
@@ -260,6 +298,12 @@ export default function ReaderScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Word-tap definition panel — renders above the canvas, preserves scroll */}
+      <VocabularyPanel
+        word={selectedWord}
+        onDismiss={() => setSelectedWord(null)}
+      />
     </SafeAreaView>
   );
 }
