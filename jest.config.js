@@ -33,4 +33,13 @@ module.exports = {
   ],
   setupFilesAfterFramework: [],
   passWithNoTests: true,
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    'app/**/*.{ts,tsx}',
+    '!src/__tests__/**',
+    '!src/__mocks__/**',
+    '!src/theme/**',
+    '!**/*.d.ts',
+  ],
+  coverageReporters: ['lcov', 'text-summary'],
 };
