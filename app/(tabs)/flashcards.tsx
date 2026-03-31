@@ -250,40 +250,43 @@ export default function FlashcardsScreen() {
     setIsLoadingDecks(true);
 
     const build = async () => {
-      // Always include an "All Words" deck
-      const allIds = vocabWords.map((w) => w.id);
-      const allDue = await getDueReviews(allIds);
+      try {
+        // Single batched fetch for all word IDs, then aggregate in memory
+        const allIds = vocabWords.map((w) => w.id);
+        const allDue = await getDueReviews(allIds);
+        const dueIdSet = new Set(allDue.map((r) => r.vocabWordId));
 
-      const result: DeckInfo[] = [
-        {
-          id: '__all__',
-          name: 'My Vocabulary',
-          wordIds: allIds,
-          dueCount: allDue.length,
-        },
-      ];
+        const result: DeckInfo[] = [
+          {
+            id: '__all__',
+            name: 'My Vocabulary',
+            wordIds: allIds,
+            dueCount: allDue.length,
+          },
+        ];
 
-      // Per-book decks for words tied to a specific book
-      const bookGroups = new Map<string, VocabWord[]>();
-      for (const w of vocabWords) {
-        if (w.bookId) {
-          bookGroups.set(w.bookId, [...(bookGroups.get(w.bookId) ?? []), w]);
+        // Per-book decks — count due from the already-fetched set
+        const bookGroups = new Map<string, VocabWord[]>();
+        for (const w of vocabWords) {
+          if (w.bookId) {
+            bookGroups.set(w.bookId, [...(bookGroups.get(w.bookId) ?? []), w]);
+          }
         }
-      }
 
-      for (const [bookId, words] of bookGroups.entries()) {
-        const ids = words.map((w) => w.id);
-        const due = await getDueReviews(ids);
-        result.push({
-          id: bookId,
-          name: words[0].bookTitle ?? 'Unknown Book',
-          wordIds: ids,
-          dueCount: due.length,
-        });
-      }
+        for (const [bookId, words] of bookGroups.entries()) {
+          const ids = words.map((w) => w.id);
+          result.push({
+            id: bookId,
+            name: words[0].bookTitle ?? 'Unknown Book',
+            wordIds: ids,
+            dueCount: ids.filter((id) => dueIdSet.has(id)).length,
+          });
+        }
 
-      setDecks(result);
-      setIsLoadingDecks(false);
+        setDecks(result);
+      } finally {
+        setIsLoadingDecks(false);
+      }
     };
 
     build();
