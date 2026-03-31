@@ -8,7 +8,7 @@
  * and uses proper User-Agent identification.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { resolveTextUrl } from './gutendex';
 import type { GutendexBook } from '@models';
 
@@ -156,7 +156,7 @@ export function splitIntoChapters(text: string): Array<{ title: string; content:
 
   const parts = body.split(chapterRegex).filter((p) => p.trim().length > 0);
 
-  if (parts.length < 3) {
+  if (parts.length < 2) {
     // No clear chapters — return as single section
     return [{ title: 'Text', content: body.trim() }];
   }
